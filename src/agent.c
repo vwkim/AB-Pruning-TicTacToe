@@ -2,7 +2,6 @@
  *  agent.c
  *  Nine-Board Tic-Tac-Toe Agent
  *  COMP3411/9414/9814 Artificial Intelligence
- *  z5227271
  *  Vincent Woo Kim
  */
 
