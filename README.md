@@ -8,8 +8,8 @@ i.e. If previous move was on upper right corner, then current player plays on up
 ### Code is tested on Ubuntu terminals
 
 # How to Start
-cd src
-make all
+  cd src
+  make all
 
 1. To play by yourself
 ./servt -x -o
