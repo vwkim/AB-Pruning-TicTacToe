@@ -5,8 +5,6 @@ Game is played on a 3x3 array of 3x3 Tic-Tac-Toe boards. First move is chosen at
 Then two players take turns placing an O or X alternately into an empty cell of the board corresponding to the cell of the previous move.
 i.e. If previous move was on upper right corner, then current player plays on upper right board.
 
-### Code is tested on Ubuntu terminals
-
 # How to Start
 cd src  
 make all
