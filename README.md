@@ -27,4 +27,5 @@ then on different terminal,
 
 Note: for ./lookt -p 12345 -d 6 specifies maximum search depth (default is 9; reasonable range is 1 to 18).
 
+# Output of the Program
 ![TicTacToe](AB_TicTacToe.png) 
