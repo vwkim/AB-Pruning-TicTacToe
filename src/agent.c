@@ -5,27 +5,6 @@
  *  Vincent Woo Kim
  */
 
-/*********************************************************
-The program was added onto the agent.c that was provided for socket communications,
-initial move by the agent(second or third) and initialization, termination of the game.
-The main algorithm that I've implemented is alpha-beta prunning search. I initially implemented
-minimax search algorithm but with limitations in maximum depth that it can search given time limit
-per move, after testing out iterative deepening with minimax, I figured alpha-beta prunning is
-essential to implement minimax-related algorithm. Not much of a data structure was used other than
-the 2D array pre-defined as board of the game. I also considerd monte carlo tree search, but given
-the performance of alpha-beta prunning, I figured it was unnecessary for this assignment.
-
-Main test out phase was on heuristic function for the algorithm. I have tried numerous variations
-starting from simple win/loss/draw to awarding two in a row, block a move, occupy corner or center.
-The main difference that I found was to evaluate the whole board (9 boards) instead of single board
-that the final move is made. The main confusion was how I would let the agent incorporate its move at each depth
-instead of just the final move. By evaluating all nine boards and summing their value, it did the trick.
-Also the heuristic function outputs a zero sum value meaning points are awarded based on agent's and opponent
-with +value for agent and -value for opponent. Lastly, I played around with maximum depth based on number of
-moves that was made i.e. maximum depth to 7 on early games and increase based on number of moves.
-Since games are often finished before certain number of moves, depth over 11 was usually not performed.
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -167,12 +146,9 @@ int agent_next_move( int prev_move )
   board[move[m-1]][move[m]] = !player;
   m++;
 
-  //Initializing alpha and beta for pruning
   int alpha = -100000;
   int beta = 100000;
 
-  //Search depths are based on number of moves.
-  //Any depth deeper than 7 takes very long time to compute at early stages of the game.
   int max_depth = 1;
   if(m < 25)
     max_depth = 7;
@@ -181,18 +157,14 @@ int agent_next_move( int prev_move )
   else
     max_depth = 11;
 
-  //Alpha-Beta Prunning Search Algorithm
   int maxScore = -100000;
   for(int p = 1; p < 10; p++)
   {
     if(board[prev_move][p] == EMPTY)
     {
-      //Make potential move
       board[prev_move][p] = player;
       int moveScore = alpha_beta_search(board, prev_move, p, 0, max_depth, alpha, beta);
-      //Reverse the board is essential so that the copy of the board is back to its original state of the game at given turn.
       board[prev_move][p] = EMPTY;
-      //Updating maximum value of available moves.
       if(maxScore < moveScore)
       {
         maxScore = moveScore;
@@ -200,7 +172,6 @@ int agent_next_move( int prev_move )
       }
     }
   }
-  //Make "best" move determined by algorithm.
   move[m] = this_move;
   board[move[m-1]][this_move] = player;
   return( this_move );
@@ -211,26 +182,21 @@ int agent_next_move( int prev_move )
 */
 int alpha_beta_search(int myBoard[10][10], int currentBoard, int nextBoard, int myTurn, int depth, int alpha, int beta)
 {
-  //9 Board scores are summed up to make the terminal state value at given turn.
   int score = 0;
   for(int i = 1; i < 10; i++)
   {
     int value = board_score(myBoard, i);
-    //If terminal state of the board is achieved.
     if (value == 10000 || value == -10000)
       return value;
 
     score += value;
   }
 
-  //If true, then game is a draw at this search.
   if(no_more_move_board(myBoard, currentBoard) == 1)
     return 0;
-  //If maximum depth search is reached.
   if(depth == 0)
     return score;
 
-  //Now recursive step through performing alpha beta search.
   if(myTurn == 1)
   {
       for(int p = 1; p < 10; p++)
@@ -238,7 +204,6 @@ int alpha_beta_search(int myBoard[10][10], int currentBoard, int nextBoard, int 
         if(myBoard[nextBoard][p] == EMPTY)
         {
           myBoard[nextBoard][p] = player;
-          //Now official recursive step!
           alpha = max(alpha, alpha_beta_search(myBoard, nextBoard, p, 0, depth-1, alpha, beta));
           myBoard[nextBoard][p] = EMPTY;
 
@@ -255,7 +220,6 @@ int alpha_beta_search(int myBoard[10][10], int currentBoard, int nextBoard, int 
       if(myBoard[nextBoard][p] == EMPTY)
       {
         myBoard[nextBoard][p] = !player;
-        //Now official recursive step!
         beta = min(beta, alpha_beta_search(myBoard, nextBoard, p, 1, depth-1, alpha, beta));
         myBoard[nextBoard][p] = EMPTY;
 
@@ -290,8 +254,6 @@ int no_more_move_board(int myBoard[10][10], int numBoard)
 */
 int board_score(int myBoard[10][10], int currentBoard)
 {
-  //Checking WIN/LOSS case
-  //Check rows
   for(int iter = 1; iter < 8; iter += 3)
   {
     if(myBoard[currentBoard][iter] == myBoard[currentBoard][iter+1] && myBoard[currentBoard][iter+1] == myBoard[currentBoard][iter+2])
@@ -302,7 +264,6 @@ int board_score(int myBoard[10][10], int currentBoard)
         return -10000;
     }
   }
-  //Check cols
   for(int iter = 1; iter < 4; iter++)
   {
     if(myBoard[currentBoard][iter] == myBoard[currentBoard][iter+3] && myBoard[currentBoard][iter+3] == myBoard[currentBoard][iter+6])
@@ -313,7 +274,6 @@ int board_score(int myBoard[10][10], int currentBoard)
         return -10000;
     }
   }
-  //Check diags 1-5-9
   if(myBoard[currentBoard][1] == myBoard[currentBoard][5] && myBoard[currentBoard][5] == myBoard[currentBoard][9])
   {
     if(myBoard[currentBoard][1] == player)
@@ -321,7 +281,6 @@ int board_score(int myBoard[10][10], int currentBoard)
     else if(myBoard[currentBoard][1] == !player)
       return -10000;
   }
-  //check diags 3-5-7
   if(myBoard[currentBoard][3] == myBoard[currentBoard][5] && myBoard[currentBoard][5] == myBoard[currentBoard][7])
   {
     if(myBoard[currentBoard][3] == player)
@@ -330,18 +289,14 @@ int board_score(int myBoard[10][10], int currentBoard)
       return -10000;
   }
 
-  //Checking intermediate board status
   int attackTwo = 10;
   int attackOne = 2;
   int blockTwo = 5;
   int score = 0;
-  //For row
   for(int i = 1; i < 9; i += 3)
   {
     if(myBoard[currentBoard][i] != EMPTY && myBoard[currentBoard][i+1] != EMPTY && myBoard[currentBoard][i+2] != EMPTY)
     {
-      //If stopped an attack (2)
-      //xxo
       if(myBoard[currentBoard][i] == myBoard[currentBoard][i+1] && myBoard[currentBoard][i+1] != myBoard[currentBoard][i+2])
       {
         if(myBoard[currentBoard][i + 2] == player)
@@ -349,7 +304,6 @@ int board_score(int myBoard[10][10], int currentBoard)
         else if (myBoard[currentBoard][i + 2] == !player)
           score -= blockTwo;
       }
-      //oxx
       else if (myBoard[currentBoard][i] != myBoard[currentBoard][i+1] && myBoard[currentBoard][i+1] == myBoard[currentBoard][i+2])
       {
         if(myBoard[currentBoard][i] == player)
@@ -357,7 +311,6 @@ int board_score(int myBoard[10][10], int currentBoard)
         else if (myBoard[currentBoard][i] == !player)
           score -= blockTwo;
       }
-      //xox
       else if (myBoard[currentBoard][i] == myBoard[currentBoard][i+2] && myBoard[currentBoard][i+2] != myBoard[currentBoard][i+1])
       {
         if(myBoard[currentBoard][i + 1] == player)
@@ -366,8 +319,6 @@ int board_score(int myBoard[10][10], int currentBoard)
           score -= blockTwo;
       }
     }
-    //Attack Two cases
-    //First case of xxE or xoE
     else if(myBoard[currentBoard][i] != EMPTY && myBoard[currentBoard][i+1] != EMPTY && myBoard[currentBoard][i+2] == EMPTY)
     {
       if(myBoard[currentBoard][i] == myBoard[currentBoard][i+1])
@@ -378,7 +329,6 @@ int board_score(int myBoard[10][10], int currentBoard)
           score -= attackTwo;
       }
     }
-    //Second case of xEx or xEo
     else if(myBoard[currentBoard][i] != EMPTY && myBoard[currentBoard][i+1] == EMPTY && myBoard[currentBoard][i+2] != EMPTY)
     {
       if(myBoard[currentBoard][i] == myBoard[currentBoard][i+2])
@@ -389,7 +339,6 @@ int board_score(int myBoard[10][10], int currentBoard)
           score -= attackTwo;
       }
     }
-    //Third case of Exx or Exo
     else if(myBoard[currentBoard][i] == EMPTY && myBoard[currentBoard][i+1] != EMPTY && myBoard[currentBoard][i+2] != EMPTY)
     {
       if(myBoard[currentBoard][i+1] == myBoard[currentBoard][i+2])
@@ -400,7 +349,6 @@ int board_score(int myBoard[10][10], int currentBoard)
           score -= attackTwo;
       }
     }
-    //Award for potential
     else if(myBoard[currentBoard][i] != EMPTY && myBoard[currentBoard][i+1] == EMPTY && myBoard[currentBoard][i+2] == EMPTY)
     {
       if(myBoard[currentBoard][i] == player)
@@ -423,10 +371,8 @@ int board_score(int myBoard[10][10], int currentBoard)
         score -= attackOne;
     }
   }
-  //For cols
   for(int i = 1; i < 4; i++)
   {
-    //If stopped an attack (2)
     if(myBoard[currentBoard][i] != EMPTY && myBoard[currentBoard][i+3] != EMPTY && myBoard[currentBoard][i+6] != EMPTY)
     {
       if(myBoard[currentBoard][i] == myBoard[currentBoard][i+3] && myBoard[currentBoard][i+3] != myBoard[currentBoard][i+6])
@@ -451,7 +397,6 @@ int board_score(int myBoard[10][10], int currentBoard)
           score -= blockTwo;
       }
     }
-    //Attack two
     else if(myBoard[currentBoard][i] != EMPTY && myBoard[currentBoard][i+3] != EMPTY && myBoard[currentBoard][i+6] == EMPTY)
     {
       if(myBoard[currentBoard][i] == myBoard[currentBoard][i+3])
@@ -482,7 +427,6 @@ int board_score(int myBoard[10][10], int currentBoard)
           score -= attackTwo;
       }
     }
-    //Award for potential
     else if(myBoard[currentBoard][i] != EMPTY && myBoard[currentBoard][i+3] == EMPTY && myBoard[currentBoard][i+6] == EMPTY)
     {
       if(myBoard[currentBoard][i] == player)
@@ -505,7 +449,6 @@ int board_score(int myBoard[10][10], int currentBoard)
         score -= attackOne;
     }
   }
-  //Diagonal {1,5,9}
   if(myBoard[currentBoard][1] != EMPTY && myBoard[currentBoard][5] != EMPTY && myBoard[currentBoard][9] != EMPTY)
   {
     if(myBoard[currentBoard][1] == myBoard[currentBoard][5] && myBoard[currentBoard][5] != myBoard[currentBoard][9])
@@ -560,7 +503,6 @@ int board_score(int myBoard[10][10], int currentBoard)
         score -= attackTwo;
     }
   }
-  //Award for potential
   else if(myBoard[currentBoard][1] != EMPTY && myBoard[currentBoard][5] == EMPTY && myBoard[currentBoard][9] == EMPTY)
   {
     if(myBoard[currentBoard][1] == player)
@@ -583,7 +525,6 @@ int board_score(int myBoard[10][10], int currentBoard)
       score -= attackOne;
   }
 
-  //Diagonal {3,5,7}
   if(myBoard[currentBoard][3] != EMPTY && myBoard[currentBoard][5] != EMPTY && myBoard[currentBoard][7] != EMPTY)
   {
     if(myBoard[currentBoard][3] == myBoard[currentBoard][5] && myBoard[currentBoard][5] != myBoard[currentBoard][7])
@@ -638,7 +579,6 @@ int board_score(int myBoard[10][10], int currentBoard)
         score -= attackTwo;
     }
   }
-  //Award point for potential
   else if(myBoard[currentBoard][3] != EMPTY && myBoard[currentBoard][5] == EMPTY && myBoard[currentBoard][7] == EMPTY)
   {
     if(myBoard[currentBoard][3] == player)
@@ -661,7 +601,6 @@ int board_score(int myBoard[10][10], int currentBoard)
       score -= attackOne;
   }
 
-  //if none the above, it is a draw.
   return score;
 }
 

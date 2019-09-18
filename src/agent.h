@@ -2,7 +2,6 @@
  *  agent.h
  *  Nine-Board Tic-Tac-Toe Agent
  *  COMP9414 Artificial Intelligence
- *  z5227271
  *  Vincent Woo Kim
  */
 extern int   port;
